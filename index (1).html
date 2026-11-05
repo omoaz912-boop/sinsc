@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مختبر الفيزياء التفاعلي | درس اللزوجة</title>
+<style>
+:root{--bg:#eef4f8;--c:#fff;--t:#13283b;--m:#586b7d;--p:#0b7a86;--p2:#e3f4f5;--ok:#168a52;--no:#cf3a3a;--ac:#e8871a;--b:#d5e1ea}
+[data-th=dark]{--bg:#0b1620;--c:#14212d;--t:#e7eff6;--m:#9bafc1;--p:#43c6d2;--p2:#12303a;--b:#27394a;--ok:#46c985;--no:#ff7070}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--t);line-height:1.9;font-size:16px}
+header{background:linear-gradient(135deg,#075a64,#0b7a86 60%,#1b9aa6);color:#fff;padding:14px 16px 10px}
+header h1{margin:0;font-size:1.15rem}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:9px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .5s}
+.top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px;background:var(--c);border-bottom:1px solid var(--b)}
+nav button{flex:none;border:1px solid var(--b);background:var(--bg);color:var(--t);padding:6px 14px;border-radius:20px;font:inherit;cursor:pointer}
+nav button.on{background:var(--p);color:#fff;border-color:var(--p)}
+main{max-width:900px;margin:0 auto;padding:12px}
+.card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:14px}
+h2{margin:0 0 8px;font-size:1.15rem;color:var(--p)}h3{margin:10px 0 4px;font-size:1rem}
+p{margin:6px 0}
+.btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:8px 16px;font:inherit;cursor:pointer;margin:4px 0 4px 6px;transition:transform .15s,opacity .15s}
+.btn:active{transform:scale(.96)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.s{background:var(--bg);color:var(--t);border:1px solid var(--b)}
+.btn.ok{background:var(--ok)}.btn.no{background:var(--no)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.box{background:var(--p2);border-radius:10px;padding:10px}
+.fm{direction:ltr;text-align:center;font-size:1.3rem;font-weight:700;background:var(--p2);border-radius:10px;padding:8px;overflow-x:auto;white-space:nowrap}
+.ltr{direction:ltr;unicode-bidi:embed}
+.rc{border:2px dashed var(--p);border-radius:10px;padding:10px;margin-top:10px}
+textarea,input[type=number],input[type=text]{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid var(--b);background:var(--bg);color:var(--t)}
+.ans{background:var(--p2);padding:8px;border-radius:8px}
+.opt{display:block;width:100%;text-align:right;margin:6px 0;padding:10px;border-radius:10px;border:2px solid var(--b);background:var(--bg);color:var(--t);font:inherit;cursor:pointer}
+.opt.ok{border-color:var(--ok);background:rgba(22,138,82,.15);animation:pop .4s}
+.opt.no{border-color:var(--no);background:rgba(207,58,58,.15);animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.03)}}
+@keyframes shake{25%{transform:translateX(6px)}75%{transform:translateX(-6px)}}
+@keyframes sl{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--a))}}
+.lay{height:20px;margin:2px auto;width:60%;border-radius:4px;background:linear-gradient(90deg,#5fb4d6,#2f86ad);animation:sl 2.4s ease-in-out infinite}
+input[type=range]{width:100%}
+.meter{height:12px;background:var(--b);border-radius:8px;overflow:hidden}.meter i{display:block;height:100%;background:var(--ac)}
+svg{max-width:100%;height:auto;display:block;margin:auto}
+.tag{display:inline-block;background:var(--p2);color:var(--p);border-radius:8px;padding:0 8px;font-size:.85rem}
+@media(prefers-reduced-motion:reduce){.lay{animation:none}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const KEY='viscosity-lab-v1';
+const DEF={sec:'intro',seen:[],th:'light',cards:{},best:null,wrong:[],hist:[],reviews:0,mastered:false};
+const load=()=>{try{return {...DEF,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...DEF}}};
+const SECS=[['intro','المقدمة والتفسير'],['exp','التجارب'],['law','القوانين'],['prob','المسائل'],['app','التطبيقات'],['rev','بطاقات المراجعة'],['quiz','الاختبار']];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const CARDS=[
+['ما تعريف اللزوجة؟','الخاصية التي تسبب وجود مقاومة أو احتكاك بين طبقات السائل بحيث تعوق انزلاق بعضها فوق بعض.'],
+['ما نوعا قوى التجاذب بين جزيئات المادة؟','قوى التماسك (بين جزيئات المادة نفسها كالعسل) وقوى التلاصق (بين جزيئات مادة ومادة أخرى كالماء والزجاج).'],
+['اذكر قانون قوة اللزوجة.','F = η A v / d'],
+['ما العامل الذي تتناسب معه قوة اللزوجة عكسياً؟','المسافة العمودية بين الطبقتين (d).'],
+['ما العلاقة بين المساحة وقوة اللزوجة؟','طردية: F ∝ A (عند ثبات باقي العوامل).'],
+['ما العلاقة بين سرعة الطبقة المتحركة وقوة اللزوجة؟','طردية: F ∝ v.'],
+['ما وحدة قياس معامل اللزوجة؟','N.s/m² وتكافئ kg/m.s أو J.s/m³.'],
+['ما تعريف معامل اللزوجة؟','يعادل القوة المماسية المؤثرة على وحدة المساحات من سائل والتي تسبب فرقاً في السرعة مقداره الوحدة بين طبقتين من السائل المسافة العمودية بينهما الوحدة.'],
+['ماذا يحدث للزوجة السوائل عند ارتفاع درجة الحرارة؟','تقل.'],
+['أيهما أكثر لزوجة: الماء أم الجلسرين؟','الجلسرين (1.5 N.s/m² مقابل 10⁻³ N.s/m² للماء عند 20°C).'],
+['ما لزوجة العسل عند 20°C؟','10 N.s/m².'],
+['ما لزوجة الماء عند 20°C وعند 100°C؟','10⁻³ N.s/m² عند 20°C، و0.28 × 10⁻³ N.s/m² عند 100°C.'],
+['كيف تتغير سرعة طبقات السائل بين لوح ساكن ولوح متحرك؟','تتدرج من صفر عند الطبقة الملامسة للساكن إلى v عند الطبقة الملامسة للمتحرك.'],
+['ما صفات السائل الأكثر لزوجة؟','يبدي مقاومة أكبر لحركته وانسيابه، ولحركة الأجسام خلاله.'],
+['لماذا تُزيَّت الآلات بزيوت ذات لزوجة كبيرة؟','لتلتصق بأجزاء الآلة ولا تنساب بعيداً عنها، فتقلل الاحتكاك والحرارة وتآكل الأجزاء.'],
+['لماذا يخفض قائد المركبة الخبير سرعتها؟','لأن مقاومة الهواء الناتجة عن لزوجته تزداد بزيادة السرعة فيرتفع معدل استهلاك الوقود.'],
+['ما دلالة زيادة معدل ترسيب كرات الدم الحمراء عن الطبيعي؟','التصاق الكرات ببعضها فيزداد حجمها ونصف قطرها فتزداد السرعة النهائية للترسيب (كما في الحمى الروماتيزمية).']
+];
+
+// [القسم, السؤال, الخيارات, رقم الإجابة الصحيحة, التفسير]
+const Q=[
+['intro','الجلسرين أكثر لزوجة من الكحول.',['صح','خطأ'],0,'في النشاط 1 ينساب الجلسرين أبطأ من الكحول، فلزوجته أكبر.'],
+['intro','سرعة انسياب الجلسرين أكبر من سرعة انسياب الكحول.',['صح','خطأ'],1,'العكس صحيح: الجلسرين أبطأ انسياباً لأن لزوجته أكبر.'],
+['intro','الكرة المعدنية تصل إلى قاع كأس ...... أسرع.',['الماء','الجلسرين','الاثنين معاً'],0,'الجلسرين يقاوم حركة الكرة بمقدار أكبر لأن لزوجته أكبر.'],
+['intro','تتحرك الملعقة في العسل بصعوبة لأن:',['مقاومة العسل أكبر لأن لزوجته أكبر','العسل أخف من الماء','الملعقة تذوب','العسل لا يلامس الملعقة'],0,'مقاومة العسل لحركة الأجسام أكبر من مقاومة الماء.'],
+['intro','قوى التلاصق هي قوى التجاذب بين:',['جزيئات المادة نفسها','جزيئات مادة وجزيئات مادة أخرى','الإلكترونات فقط','الذرات داخل النواة'],1,'مثل التلاصق بين جزيئات قطرة الماء والزجاج. أما التماسك فبين جزيئات المادة نفسها.'],
+['intro','سرعة الطبقة الملامسة للوح الساكن تساوي:',['v','v/2','صفراً','2v'],2,'الطبقة الملامسة للساكن تكون ساكنة، وتتزايد السرعة تدريجياً حتى v عند المتحرك.'],
+['intro','تنشأ المقاومة بين طبقات السائل من قوى التماسك بين جزيئاته.',['صح','خطأ'],0,'الاحتكاك بين طبقات السائل ناتج عن قوى التماسك بين جزيئاتها.'],
+['law','وحدة قياس معامل اللزوجة هي:',['N.s/m²','N/m²','N.m','m/s'],0,'η = Fd/Av فوحدته N.s/m² وتكافئ kg/m.s.'],
+['law','إذا تضاعفت المسافة d بين الطبقتين مع ثبات باقي العوامل فإن F:',['تتضاعف','تنصف','تصبح أربعة أمثالها','لا تتغير'],1,'F تتناسب عكسياً مع d.'],
+['law','إذا تضاعفت المساحة A والسرعة v معاً فإن F تصبح:',['مثلي قيمتها','4 أمثال قيمتها','نصف قيمتها','ثابتة'],1,'F ∝ A و F ∝ v فتتضاعف مرتين: 2 × 2 = 4.'],
+['law','تتناسب قوة اللزوجة طردياً مع معامل لزوجة السائل.',['صح','خطأ'],0,'F = η A v / d.'],
+['law','سائل η = 2 N.s/m² و A = 1 m² و v = 1 m/s و d = 0.1 m. القوة F تساوي:',['0.2 N','2 N','20 N','200 N'],2,'F = 2 × 1 × 1 / 0.1 = 20 N.'],
+['law','لزوجة الماء عند 100°C أكبر منها عند 20°C.',['صح','خطأ'],1,'تقل اللزوجة بارتفاع الحرارة: من 10⁻³ إلى 0.28 × 10⁻³ N.s/m².'],
+['law','لزوجة الماء عند 20°C تساوي:',['10⁻³ N.s/m²','1.5 N.s/m²','10 N.s/m²','0.28 N.s/m²'],0,'الجلسرين 1.5 والعسل 10 والماء 10⁻³ N.s/m².'],
+['law','قوة اللزوجة تتناسب مع η و A و v وعكسياً مع d. أي رسم يمثل F مع 1/d؟',['خط مستقيم يمر بنقطة الأصل','قطع مكافئ','خط أفقي','دائرة'],0,'F ∝ 1/d علاقة طردية مع مقلوب d فيكون الرسم خطاً مستقيماً من نقطة الأصل.'],
+['prob','سطح مساحته 0.5 m² يتحرك بسرعة 2 m/s فوق طبقة سمكها 4 cm من سائل η = 1.5 kg/m.s. القوة اللازمة:',['150 N','67.5 N','50 N','37.5 N'],3,'F = 1.5 × 0.5 × 2 / 0.04 = 37.5 N.'],
+['prob','في مسألة اللوحين x و y (الكتاب)، النسبة بين السرعتين vx/vy تساوي:',['1/2','1/1','8/1','1/8'],2,'v = Fd/ηA فتكون vx/vy = (dx·Ay)/(dy·Ax) = 8/1 كما في الكتاب.'],
+['prob','في مسألة الألواح a و b و c (الكتاب) القوة الكلية على اللوح b تساوي:',['0.03 N','0.12 N','1.2 × 10⁻³ N','2.7 × 10⁻⁴ N'],1,'Fb = ηAvb(1/dab + 1/dbc) = 0.12 N.'],
+['app','تستخدم زيوت ذات لزوجة كبيرة في تزييت الآلات لأنها:',['تلتصق بأجزاء الآلة ولا تنساب بعيداً','تتبخر سريعاً','تزيد الاحتكاك','تقلل الكتلة'],0,'الالتصاق يضمن استمرار الحركة السلسة وتقليل الاحتكاك.'],
+['app','زيادة معدل الترسيب عن المعدل الطبيعي لكرات الدم الحمراء تعني:',['التصاق الكرات ببعضها وزيادة حجمها','تكسر الكرات','نقصاً في حجمها','لا علاقة لها بالحجم'],0,'التصاق الكرات يزيد حجمها فتزداد السرعة النهائية (مثل الحمى الروماتيزمية).'],
+['app','يلجأ قائد المركبة الخبير إلى الحد من سرعتها:',['لتقليل معدل استهلاك الوقود','لزيادة مقاومة الهواء','لزيادة الاحتكاك','لتقليل لزوجة الهواء فقط'],0,'مقاومة الهواء الناتجة عن لزوجته تزداد بزيادة السرعة فيرتفع استهلاك الوقود.']
+];
+
+function useRaf(cb,on=true){const r=useRef(cb);r.current=cb;useEffect(()=>{if(!on)return;let id,l=performance.now();const f=n=>{r.current(Math.min((n-l)/1000,.05));l=n;id=requestAnimationFrame(f)};id=requestAnimationFrame(f);return()=>cancelAnimationFrame(id)},[on])}
+
+function Recall({q,a}){
+  const [v,setV]=useState('');const [o,setO]=useState(false);
+  return <div className="rc"><b>🧠 استرجع من ذاكرتك: {q}</b>
+    <textarea rows="2" value={v} onChange={e=>setV(e.target.value)} placeholder="اكتب إجابتك أولاً ثم اكشف الإجابة"/>
+    <button className="btn" disabled={!v.trim()} onClick={()=>setO(true)}>اكشف الإجابة</button>
+    {o&&<p className="ans">✅ {a}</p>}</div>;
+}
+
+function Steps({items}){
+  const [n,setN]=useState(1);
+  return <div>{items.slice(0,n).map((s,i)=><p key={i} className="box"><b>{i+1}.</b> <span className="ltr">{s}</span></p>)}
+    {n<items.length?<button className="btn" onClick={()=>setN(n+1)}>الخطوة التالية</button>:<button className="btn s" onClick={()=>setN(1)}>إعادة</button>}</div>;
+}
+
+function Race({kind,L,title,note}){
+  const [t,setT]=useState(0),[run,setRun]=useState(false);
+  const mx=Math.max(...L.map(x=>x.T));
+  useRaf(dt=>setT(v=>Math.min(v+dt,mx)),run);
+  useEffect(()=>{if(t>=mx)setRun(false)},[t]);
+  const done=t>=mx;
+  return <div className="card"><h2>{title}</h2>
+    <div className="grid">{L.map(x=>{const p=Math.min(t/x.T,1);return <div key={x.n} className="box" style={{textAlign:'center'}}>
+      <b>{x.n}</b>
+      {kind==='flow'?
+      <svg viewBox="0 0 120 210" width="130"><rect x="25" y="10" width="70" height="90" rx="4" fill="none" stroke="#789" strokeWidth="2"/>
+        <rect x="26" y={11+88*p} width="68" height={88*(1-p)} fill={x.c}/>
+        <path d="M45 100h30l-8 14h-14z" fill="#789"/>
+        {p>0&&p<1&&<line x1="60" y1="114" x2="60" y2={205-80*p} stroke={x.c} strokeWidth="3"/>}
+        <rect x="25" y="125" width="70" height="80" rx="4" fill="none" stroke="#789" strokeWidth="2"/>
+        <rect x="26" y={204-78*p} width="68" height={78*p} fill={x.c}/></svg>
+      :<svg viewBox="0 0 120 210" width="130"><rect x="20" y="10" width="80" height="195" rx="4" fill={x.c} fillOpacity=".35" stroke="#789" strokeWidth="2"/>
+        <circle cx="60" cy={28+158*p} r="12" fill="#444"/></svg>}
+      <div className="fm" style={{fontSize:'1.1rem'}}>⏱ {Math.min(t,x.T).toFixed(2)} s</div></div>})}</div>
+    <button className="btn" onClick={()=>{setT(0);setRun(true)}} disabled={run}>▶ بدء التجربة</button>
+    <button className="btn s" onClick={()=>{setRun(false);setT(0)}}>↺ إعادة التجربة</button>
+    {done&&<p className="ans">✅ {note}</p>}
+    <small>الأزمنة في المحاكاة تمثيلية للمقارنة بين السائلين.</small></div>;
+}
+
+function Bowl({n,k,T,c}){
+  const [x,setX]=useState(.5);const tg=useRef(.5);const [up,setUp]=useState(false);const [th,setTh]=useState(1);
+  useRaf(dt=>{setX(v=>v+(tg.current-v)*Math.min(1,k*dt*60));setTh(v=>up?Math.max(0,v-dt/T):1)});
+  const mv=e=>{const r=e.currentTarget.getBoundingClientRect();tg.current=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width))};
+  const sx=20+x*140;
+  return <div className="box" style={{textAlign:'center'}}><b>{n}</b>
+    <svg viewBox="0 0 180 150" width="260" style={{touchAction:'none',cursor:'grab'}} onPointerMove={mv} onPointerDown={mv}>
+      <rect x="10" y="60" width="160" height="85" rx="6" fill={c} fillOpacity=".5" stroke="#789" strokeWidth="2"/>
+      {up?<g>{th>0&&<line x1={sx} y1="45" x2={sx} y2="75" stroke={c} strokeWidth="4" opacity={th}/>}<line x1={sx} y1="10" x2={sx} y2="45" stroke="#666" strokeWidth="4"/><ellipse cx={sx} cy="42" rx="10" ry="6" fill="#999"/></g>
+      :<g><line x1={sx} y1="30" x2={sx} y2="100" stroke="#666" strokeWidth="4"/><ellipse cx={sx} cy="105" rx="10" ry="6" fill="#999"/></g>}
+    </svg>
+    <p style={{margin:0}}>اسحب بإصبعك أو الماوس داخل الكأس</p>
+    <button className="btn s" onClick={()=>{setUp(!up);setTh(1)}}>{up?'أنزل الملعقة':'ارفع الملعقة'}</button></div>;
+}
+
+function Intro(){
+  const L=[['الماء',1e-3,'#5aa9e6'],['الجلسرين',1.5,'#9acd7a'],['العسل',10,'#e8a317']];
+  return <>
+  <div className="card"><h2>ما اللزوجة؟</h2>
+    <p>من الخصائص المميزة للسوائل عند انسيابها وجود قوى احتكاك بين طبقات السائل تعوق انزلاق بعضها فوق بعض. تُعرَّف <b>اللزوجة</b> بأنها: الخاصية التي تسبب وجود مقاومة أو احتكاك بين طبقات السائل بحيث تعوق انزلاق بعضها فوق بعض.</p>
+    <p>السائل الأكثر لزوجة يبدي مقاومة أكبر لحركته وانسيابه، ويبدي مقاومة أكبر لحركة الأجسام خلاله. لذلك ينساب الماء أسرع من العسل.</p>
+    <h3>مقارنة اللزوجة عند 20°C (رسم لوغاريتمي توضيحي)</h3>
+    {L.map(([n,e,c])=><div key={n}><span>{n}: <span className="ltr">{e<0.01?'10⁻³':e} N.s/m²</span></span><div className="meter"><i style={{width:((Math.log10(e)+3.5)/4.5*100)+'%',background:c}}/></div></div>)}
+    <Recall q="لماذا ينساب الماء أسرع من العسل؟" a="لأن لزوجة العسل أكبر بكثير، فمقاومة الاحتكاك بين طبقاته أكبر وتعوق انزلاق بعضها فوق بعض."/></div>
+  <div className="card"><h2>تفسير خاصية اللزوجة</h2>
+    <p>يوجد نوعان من قوى التجاذب بين جزيئات المادة وبعضها:</p>
+    <p><b>قوى التماسك:</b> بين جزيئات نفس المادة، مثل قوى التماسك بين جزيئات العسل.</p>
+    <p><b>قوى التلاصق:</b> بين جزيئات مادة وجزيئات مادة أخرى، مثل التلاصق بين جزيئات قطرة الماء والزجاج.</p>
+    <h3>سائل محصور بين لوحين: أحدهما ساكن والآخر متحرك بسرعة v</h3>
+    <div style={{textAlign:'center'}}><small>اللوح المتحرك (v) ←</small>
+    {[6,5,4,3,2,1,0].map(i=><div key={i} className="lay" style={{'--a':(i*9)+'px',opacity:.55+i*.07}}/>)}
+    <small>اللوح الساكن (v = 0)</small></div>
+    <p>① الطبقة الملامسة للوح المتحرك تتحرك بنفس سرعته (v) بسبب قوى التلاصق.<br/>② الطبقة الملامسة للوح الساكن تكون ساكنة.<br/>③ باقي الطبقات تتحرك بسرعات تتراوح من الصفر إلى v، وتتزايد تدريجياً من الساكن إلى المتحرك، بسبب احتكاك كل طبقة بالتي تحتها (قوى التماسك).</p>
+    <Recall q="كيف تتغير سرعة الطبقات من اللوح الساكن إلى المتحرك؟" a="تتزايد تدريجياً من الصفر عند الطبقة الملامسة للوح الساكن إلى v عند الطبقة الملامسة للوح المتحرك."/></div></>;
+}
+
+function Exp(){return <>
+  <Race kind="flow" title="التجربة 1: الجلسرين والكحول" L={[{n:'كحول',T:2,c:'#f5e663'},{n:'جلسرين',T:5,c:'#c9d98a'}]} note="الجلسرين أبطأ انسياباً، أي أن قابليته للانسياب أقل، فلزوجة الجلسرين أكبر من لزوجة الكحول."/>
+  <Race kind="ball" title="التجربة 2: كرة معدنية في الماء والجلسرين" L={[{n:'ماء',T:2,c:'#5aa9e6'},{n:'جلسرين',T:4,c:'#b6d97a'}]} note="تصل الكرة إلى قاع كأس الماء أسرع. الجلسرين يقاوم حركة الكرة بمقدار أكبر، فلزوجة الجلسرين أكبر من لزوجة الماء."/>
+  <div className="card"><h2>التجربة 3: الملعقة في العسل والماء</h2>
+    <div className="grid"><Bowl n="عسل" k={.04} T={4} c="#e8a317"/><Bowl n="ماء" k={.3} T={.4} c="#7cc4f0"/></div>
+    <p>حرّك الملعقة في كل كأس: تتحرك بصعوبة في العسل (تتأخر خلف إصبعك) وبسهولة في الماء. ثم اضغط «ارفع الملعقة»: تتوقف حركة العسل بعد إخراج الملعقة بفترة وجيزة فقط بينما تستمر حركة الماء أطول لأن مقاومة العسل لحركته أكبر.</p>
+    <p className="ans">الاستنتاج: لزوجة العسل أكبر من لزوجة الماء.</p>
+    <Recall q="ما الذي تلاحظه من مقاومة العسل والماء لحركة الملعقة، وماذا تستنتج؟" a="مقاومة العسل أكبر لأن لزوجته أكبر من لزوجة الماء."/></div></>;}
+
+function Law(){
+  const [e,setE]=useState(1.5),[A,setA]=useState(.5),[v,setV]=useState(2),[d,setD]=useState(4),[T,setT]=useState(20);
+  const F=e*A*v/(d/100);
+  const eta=1e-3*Math.pow(.28,(T-20)/80);
+  const S=(l,val,set,mn,mx,st,u)=><div><label>{l} = <b className="ltr">{val} {u}</b></label><input type="range" min={mn} max={mx} step={st} value={val} onChange={x=>set(+x.target.value)}/></div>;
+  return <>
+  <div className="card"><h2>قانون قوة اللزوجة</h2>
+    <p>بفرض وجود طبقتين من سائل المسافة العمودية بينهما d، وأثرت قوة مماسية F على الطبقة العليا (مساحتها A) فسببت فرقاً في السرعة بين الطبقتين مقداره v. لكي تظل الطبقة المتحركة بسرعة ثابتة يجب أن تتعادل القوة المماسية مع قوى الاحتكاك بين طبقات السائل (قوة اللزوجة).</p>
+    <div className="fm">F = η · A · v / d</div>
+    <p>F: قوة اللزوجة (N) • η: معامل لزوجة السائل • A: مساحة الطبقة المتحركة • v: سرعة الطبقة المتحركة • d: المسافة العمودية بين الطبقتين.</p>
+    <p>ومن ذلك: η = F d / (A v).</p></div>
+  <div className="card"><h2>العوامل التي تتوقف عليها قوة اللزوجة</h2>
+    <div className="grid">
+    <div className="box"><b>① السرعة v</b><br/>طردية: F ∝ v (ضعف السرعة = ضعف القوة).</div>
+    <div className="box"><b>② المساحة A</b><br/>طردية: F ∝ A.</div>
+    <div className="box"><b>③ المسافة d</b><br/>عكسية: F ∝ 1/d (نصف المسافة = ضعف القوة).</div>
+    <div className="box"><b>④ معامل اللزوجة η</b><br/>طردية: F ∝ η.</div></div>
+    <h3>جرّب بنفسك: غيّر أي عامل وراقب F</h3>
+    {S('η',e,setE,.1,10,.1,'N.s/m²')}{S('A',A,setA,.1,2,.1,'m²')}{S('v',v,setV,.5,10,.5,'m/s')}{S('d',d,setD,1,20,1,'cm')}
+    <div className="fm">F = {e} × {A} × {v} / {d/100} = {F.toFixed(2)} N</div>
+    <div className="meter"><i style={{width:Math.min(100,100*Math.log10(F+1)/Math.log10(20001))+'%'}}/></div>
+    <Recall q="ماذا يحدث لـ F إذا زادت d إلى الضعف وزادت v إلى الضعف؟" a="تبقى F ثابتة، فالمضاعفة في v تقابلها المضاعفة في d (F ∝ v/d)."/></div>
+  <div className="card"><h2>معامل اللزوجة ووحداته</h2>
+    <p>معامل اللزوجة η يعادل القوة المماسية المؤثرة على وحدة المساحات من سائل والتي تسبب فرقاً في السرعة مقداره الوحدة بين طبقتين المسافة العمودية بينهما الوحدة.</p>
+    <div className="fm">N.s/m² = kg/m.s = J.s/m³</div>
+    <h3>قيم عند 20°C</h3><p className="ltr">ماء: 10⁻³ • جلسرين: 1.5 • عسل: 10 (N.s/m²)</p>
+    <h3>تأثير درجة الحرارة</h3>
+    <p>تقل لزوجة السائل بارتفاع درجة حرارته. للماء: عند 20°C تساوي 10⁻³ وعند 100°C تساوي 0.28 × 10⁻³ N.s/m².</p>
+    {S('درجة الحرارة',T,setT,20,100,1,'°C')}
+    <div className="fm">η ≈ {(eta*1000).toFixed(3)} × 10⁻³ N.s/m²</div>
+    <div className="meter"><i style={{width:(eta/1e-3*100)+'%'}}/></div>
+    <small>قيمتا 20°C و100°C من الكتاب، والقيم بينهما تقدير رياضي تقريبي للتوضيح.</small></div>
+  <div className="card"><h2>حاسبة اللزوجة</h2><Calc/></div></>;
+}
+
+function Calc(){
+  const [f,setF]=useState({e:'',A:'',v:'',d:''});const [r,setR]=useState(null);
+  const go=()=>{const n=['e','A','v','d'].map(k=>parseFloat(f[k]));
+    if(n.some(x=>isNaN(x)))return setR({err:'أكمل جميع الخانات بأرقام صحيحة.'});
+    if(n.some(x=>x<=0))return setR({err:'يجب أن تكون جميع القيم أكبر من صفر.'});
+    const [e,A,v,d]=n;const dm=d/100;setR({e,A,v,d,dm,F:e*A*v/dm});};
+  const I=(k,l)=><div><label>{l}</label><input type="number" inputMode="decimal" value={f[k]} onChange={x=>setF({...f,[k]:x.target.value})}/></div>;
+  return <div><div className="grid">{I('e','η (N.s/m²)')}{I('A','A (m²)')}{I('v','v (m/s)')}{I('d','d (cm)')}</div>
+    <button className="btn" onClick={go}>احسب</button>
+    {r&&(r.err?<p className="ans" style={{color:'var(--no)'}}>⚠ {r.err}</p>:<div>
+      <p className="box">① المعطيات: η = {r.e}، A = {r.A} m²، v = {r.v} m/s، d = {r.d} cm</p>
+      <p className="box">② القانون: <span className="ltr">F = η A v / d</span></p>
+      <p className="box">③ التحويل: d = {r.d} ÷ 100 = {r.dm} m</p>
+      <p className="box ltr">④ F = ({r.e} × {r.A} × {r.v}) / {r.dm} = {r.e*r.A*r.v} / {r.dm}</p>
+      <p className="ans">⑤ الناتج: <b className="ltr">F = {+r.F.toPrecision(6)} N</b> (الوحدة: نيوتن)</p></div>)}</div>;
+}
+
+function Prob(){return <>
+  <div className="card"><h2>المسألة 1</h2><p>سطح مستوٍ مساحته 0.5 m² يتحرك بسرعة منتظمة 2 m/s موازياً لسطح آخر ساكن، ومعزول عنه بطبقة سمكها 4 cm من سائل معامل لزوجته 1.5 kg/m.s. القوة اللازمة للمحافظة على السرعة المنتظمة تساوي؟</p>
+    <Steps items={['المعطيات: A = 0.5 m² ، v = 2 m/s ، d = 4 cm ، η = 1.5 kg/m.s ، F = ?','القانون: F = η A v / d','التحويل: d = 4 × 10⁻² m','التعويض: F = (1.5 × 0.5 × 2) / (4 × 10⁻²)','الناتج: F = 37.5 N  ← الاختيار الصحيح (أ)']}/>
+    <p><b>ماذا لو</b> رُفعت درجة حرارة السائل؟ تقل η فتقل القوة اللازمة (F ∝ η).</p></div>
+  <div className="card"><h2>المسألة 2: اللوحان x و y</h2><p>لوحان x و y يتحركان أفقياً على سطحي سائل بسرعتين منتظمتين vx و vy بتأثير قوتين مماسيتين ثابتتين مقدار كل منهما F كما بالشكل. النسبة vx/vy تساوي؟</p>
+    <Steps items={['القوتان متساويتان ومعامل لزوجة السائل ثابت.','F = η A v / d  ←  v = F d / (η A)','إذن v ∝ d / A','vx/vy = (dx · Ay) / (dy · Ax) = (2d × (2ℓ)²) / (d × ℓ²)','vx/vy = 8/1  ← الاختيار الصحيح (ج) كما في الكتاب']}/></div>
+  <div className="card"><h2>المسألة 3: الألواح a و b و c</h2><p>ثلاثة ألواح رقيقة a و b و c في مستويات أفقية متوازية بينها سائل η = 0.8 kg/m.s. اللوحان a و c ساكنان، واللوح b حر الحركة ومساحة سطحه 4 cm² ويبعد عن أحد اللوحين ضعف بعده عن الآخر. المسافة بين a و c تساوي 6 cm. القوة اللازمة لتحريك b بسرعة 5 m/s؟</p>
+    <Steps items={['المعطيات: η = 0.8 ، Ab = 4 cm² = 4 × 10⁻⁴ m² ، dac = 6 cm ، dab = 2 dbc ، vb = 5 m/s','dac = dab + dbc  ⇒  6 = 2 dbc + dbc  ⇒  dbc = 2 cm ، dab = 4 cm','السائل يؤثر على اللوح b بقوتي احتكاك (من أعلى ومن أسفل): Fb = Fab + Fbc','Fb = η Ab vb (1/dab + 1/dbc)','Fb = 0.8 × 4×10⁻⁴ × 5 × (1/(4×10⁻²) + 1/(2×10⁻²))','Fb = 1.6×10⁻³ × (25 + 50) = 0.12 N  ← الاختيار الصحيح (ب)']}/></div></>;}
+
+function App2(){
+  const D=[['تزييت وتشحيم الآلات المعدنية','ينبغي تشحيم الآلات لإنقاص كمية الحرارة المتولدة نتيجة الاحتكاك ولحماية أجزائها من التآكل وزيادة كفاءتها. تُستخدم زيوت ذات لزوجة كبيرة لتلتصق بأجزاء الآلة ولا تنساب بعيداً عنها. ولا يمكن استخدام الماء لأنه من السوائل ذات اللزوجة الصغيرة فيسرع بالانسياب بعيداً عن الآلة لضعف قوة التصاقه بها.'],
+  ['المركبات المتحركة واستهلاك الوقود','معدل استهلاك الوقود يتوقف على حركة المركبة بعجلة، وعلى قوى الاحتكاك مع الطريق ومع الهواء. مقاومة الهواء الناتجة عن لزوجته تزداد بزيادة سرعة المركبة فيرتفع استهلاك الوقود، لذلك يلجأ قائد المركبة الخبير إلى الحد من سرعتها.'],
+  ['اختبار سرعة ترسيب الدم','عند سقوط كرة في سائل تؤثر عليها قوة وزنها لأسفل وقوة دفع السائل لأعلى وقوة الاحتكاك (اللزوجة). تزداد السرعة حتى تصل السرعة النهائية عند اتزان القوى، وتزداد بزيادة قطر الكرة. وعند التصاق كرات الدم الحمراء ببعضها يزداد حجمها فيكون معدل الترسيب أعلى من الطبيعي (كالحمى الروماتيزمية)، وعند تكسرها يقل حجمها فيقل المعدل (كالأنيميا).'],
+  ['المعدل الطبيعي للترسيب','يتراوح بين 0 و22 mm/h للرجال، وبين 0 و29 mm/h للنساء.']];
+  return <div className="card"><h2>تطبيقات على خاصية اللزوجة</h2>
+    {D.map(([t,x],i)=><details key={i} style={{marginBottom:8}}><summary><b>{t}</b></summary><p>{x}</p></details>)}
+    <h3>كرة تسقط في سائل</h3><svg viewBox="0 0 200 120" width="220"><rect x="60" y="5" width="80" height="110" fill="#5aa9e6" fillOpacity=".3" stroke="#789"/><circle cx="100" cy="30" r="10" fill="#444"><animate attributeName="cy" values="20;95;95" keyTimes="0;.7;1" dur="3s" repeatCount="indefinite"/></circle><text x="148" y="60" fontSize="9" fill="currentColor">دفع + لزوجة ↑</text><text x="5" y="60" fontSize="9" fill="currentColor">الوزن ↓</text></svg>
+    <Recall q="لماذا لا نستخدم الماء لتزييت الآلات؟" a="لأن لزوجته صغيرة فينساب بعيداً عن الآلة لضعف قوة التصاقه بأجزائها."/></div>;
+}
+
+function Review({S,up}){
+  const [show,setShow]=useState(false);const now=Date.now();
+  const due=CARDS.map((_,i)=>i).filter(i=>((S.cards[i]||{}).due||0)<=now).sort((a,b)=>((S.cards[a]||{}).l||0)-((S.cards[b]||{}).l||0));
+  const cur=due[0];
+  const mark=ok=>{const c=S.cards[cur]||{b:0,n:0,w:0};const b=ok?Math.min(c.b+1,4):0;
+    const mins=[0,10,1440,4320,10080][b];
+    up({cards:{...S.cards,[cur]:{b,n:c.n+1,w:c.w+(ok?0:1),l:Date.now(),due:ok?Date.now()+mins*6e4:0}},reviews:S.reviews+1});setShow(false)};
+  const mastered=CARDS.filter((_,i)=>((S.cards[i]||{}).b||0)>=3).length;
+  const weak=CARDS.map((c,i)=>[c,S.cards[i]]).filter(([c,s])=>s&&s.n>0&&s.b<2);
+  return <><div className="card"><h2>بطاقات الحفظ والتكرار المتباعد</h2>
+    <p>أتقنت <b>{mastered}</b> من {CARDS.length} بطاقة. الخطأ يعيد البطاقة بسرعة، والإجابة الصحيحة تؤخر ظهورها (10 دقائق ثم يوم ثم 3 أيام ثم أسبوع).</p>
+    <div className="meter"><i style={{width:(mastered/CARDS.length*100)+'%'}}/></div>
+    {cur===undefined?<p className="ans">🎉 لا توجد بطاقات مستحقة الآن. عد لاحقاً للمراجعة.</p>:
+    <div className="rc"><span className="tag">مستوى الإتقان: {(S.cards[cur]||{b:0}).b}/4</span><h3>{CARDS[cur][0]}</h3>
+      {show?<><p className="ans">{CARDS[cur][1]}</p><button className="btn ok" onClick={()=>mark(true)}>أعرف الإجابة</button><button className="btn no" onClick={()=>mark(false)}>لم أحفظها بعد</button></>:
+      <button className="btn" onClick={()=>setShow(true)}>إظهار الإجابة</button>}</div>}</div>
+  <div className="card"><h2>المعلومات التي تحتاج إلى مراجعة</h2>
+    {weak.length?weak.map(([c,s],i)=><p key={i} className="box"><b>{c[0]}</b><br/>{c[1]} <small>(أخطأت {s.w} مرة)</small></p>):<p>لا توجد معلومات ضعيفة حتى الآن.</p>}</div></>;
+}
+
+function Quiz({S,up}){
+  const [qs,setQs]=useState(null);const [i,setI]=useState(0);const [sel,setSel]=useState(null);const [res,setRes]=useState([]);
+  const start=()=>{setQs(shuffle(Q.map((q,id)=>({id,t:q[0],q:q[1],o:q[2].map((t,j)=>({t,ok:j===q[3]})),e:q[4]}))).map(x=>x.o.length>2?{...x,o:shuffle(x.o)}:x));setI(0);setSel(null);setRes([])};
+  if(!qs)return <div className="card"><h2>الاختبار الشامل ({Q.length} سؤالاً)</h2>
+    <p>الأسئلة والخيارات عشوائية، والتصحيح فوري مع الشرح. لا يُعتبر الدرس متقناً إلا بدرجة 90% أو أكثر.</p>
+    {S.best!=null&&<p className="ans">أفضل درجة: <b>{S.best}%</b> {S.mastered?'🏆 الدرس متقن':'— لم يتحقق الإتقان بعد'}</p>}
+    <button className="btn" onClick={start}>ابدأ الاختبار</button></div>;
+  if(i>=qs.length){
+    const ok=res.filter(r=>r.ok).length;const pct=Math.round(ok/qs.length*100);
+    const names={intro:'المفاهيم والتجارب',law:'القوانين والوحدات',prob:'المسائل',app:'التطبيقات'};
+    const by={};res.forEach(r=>{const k=r.t;by[k]=by[k]||[0,0];by[k][1]++;if(r.ok)by[k][0]++});
+    const mastered=CARDS.filter((_,j)=>((S.cards[j]||{}).b||0)>=3).length;
+    return <div className="card"><h2>تقرير الاختبار</h2>
+      <p className="fm">{ok} / {qs.length} = {pct}%</p>
+      <p>{pct>=90?'🏆 ممتاز! تحقق الإتقان.':'لم تصل بعد إلى 90%. راجع النقاط أدناه وأعد المحاولة.'}</p>
+      <p><b>نسبة الفهم (الاختبار):</b> {pct}% • <b>نسبة الحفظ (البطاقات المتقنة):</b> {Math.round(mastered/CARDS.length*100)}%</p>
+      <h3>الأداء حسب الجزء</h3>
+      {Object.keys(by).map(k=><p key={k}>{names[k]}: {by[k][0]}/{by[k][1]} {by[k][0]===by[k][1]?'✅ متقن':'⚠ يحتاج مراجعة'}</p>)}
+      <h3>الأسئلة التي أخطأت فيها</h3>
+      {res.filter(r=>!r.ok).length?res.filter(r=>!r.ok).map((r,j)=><p key={j} className="box"><b>{r.q}</b><br/>{r.e}</p>):<p>لا يوجد، أحسنت!</p>}
+      <button className="btn" onClick={start}>إعادة الاختبار بأسئلة بترتيب جديد</button></div>;}
+  const q=qs[i];
+  const pick=j=>{if(sel!==null)return;setSel(j);const ok=q.o[j].ok;setRes([...res,{ok,t:q.t,q:q.q,e:q.e,id:q.id}]);
+    const last=i===qs.length-1;const R=[...res,{ok}];
+    if(last){const pct=Math.round(R.filter(r=>r.ok).length/qs.length*100);
+      up({best:Math.max(S.best||0,pct),mastered:S.mastered||pct>=90,hist:[...S.hist,{pct,d:Date.now()}],wrong:[...new Set([...S.wrong,...res.filter(r=>!r.ok).map(r=>r.id),...(ok?[]:[q.id])])]});}};
+  return <div className="card"><span className="tag">سؤال {i+1} من {qs.length}</span><h3>{q.q}</h3>
+    {q.o.map((o,j)=><button key={j} className={'opt'+(sel!==null?(o.ok?' ok':j===sel?' no':''):'')} onClick={()=>pick(j)}>{o.t}</button>)}
+    {sel!==null&&<><p className="ans">{q.o[sel].ok?'✅ إجابة صحيحة. ':'❌ إجابة خاطئة. '}{q.e}</p>
+      <button className="btn" onClick={()=>{setI(i+1);setSel(null)}}>{i===qs.length-1?'عرض التقرير':'السؤال التالي'}</button></>}</div>;
+}
+
+function App(){
+  const [S,setS]=useState(load);
+  const up=p=>setS(s=>({...s,...p}));
+  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}document.documentElement.dataset.th=S.th},[S]);
+  useEffect(()=>{if(!S.seen.includes(S.sec))up({seen:[...S.seen,S.sec]})},[S.sec]);
+  const pr=Math.round(S.seen.length/SECS.length*100);
+  const reset=()=>{if(confirm('سيتم حذف كل تقدمك نهائياً. هل أنت متأكد؟')){try{localStorage.removeItem(KEY)}catch(e){}setS({...DEF})}};
+  const V={intro:<Intro/>,exp:<Exp/>,law:<Law/>,prob:<Prob/>,app:<App2/>,rev:<Review S={S} up={up}/>,quiz:<Quiz S={S} up={up}/>}[S.sec];
+  return <><header><div className="top"><h1>🔬 مختبر الفيزياء التفاعلي | درس اللزوجة</h1>
+      <span><button className="btn s" onClick={()=>up({th:S.th==='dark'?'light':'dark'})}>{S.th==='dark'?'☀ نهاري':'🌙 ليلي'}</button>
+      <button className="btn s" onClick={reset}>إعادة تعيين التقدم</button></span></div>
+    <div className="bar"><i style={{width:pr+'%'}}/></div>
+    <small>التقدم: {pr}% • مراجعات: {S.reviews} {S.mastered?'• 🏆 درس متقن':''}</small></header>
+    <nav>{SECS.map(([k,n])=><button key={k} className={S.sec===k?'on':''} onClick={()=>{up({sec:k});window.scrollTo(0,0)}}>{n}</button>)}</nav>
+    <main>{V}</main></>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
